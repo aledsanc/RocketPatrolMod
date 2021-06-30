@@ -4,6 +4,7 @@ class Play extends Phaser.Scene {
     }
 
     preload() {
+        this.load.image('newship', './assets/newship.png');
         this.load.image('rocket', './assets/rocket.png');
         this.load.image('spaceship', './assets/spaceship.png');
         this.load.image('starfield', './assets/starfield.png');
@@ -14,24 +15,25 @@ class Play extends Phaser.Scene {
         this.add.text(20, 20, "Rocket Patrol Play");
 
         this.starfield = this.add.tileSprite(0, 0, 640, 480, 'starfield').setOrigin(0,0);
-
+        
         // green UI background
-        this.add.rectangle(0, borderUISize + borderPadding,
-            game.config.width,
+        this.add.rectangle(0, borderUISize + borderPadding, 
+            game.config.width, 
             borderUISize * 2, 0x00FF00).setOrigin(0,0);
         this.add.rectangle(0, 0, game.config.width, borderUISize, 0xFFFFFF).setOrigin(0,0);
         this.add.rectangle(0, game.config.height - borderUISize, game.config.width, borderUISize, 0xFFFFFF).setOrigin(0,0);
         this.add.rectangle(0, 0, borderUISize, game.config.height, 0xFFFFFF).setOrigin(0,0);
         this.add.rectangle(game.config.width - borderUISize, 0, borderUISize, game.config.height, 0xFFFFFF).setOrigin(0,0);
-
-        this.p1Rocket = new Rocket(this,
-            game.config.width / 2,
-            game.config.height - (borderUISize + borderPadding),
+      
+        this.p1Rocket = new Rocket(this, 
+            game.config.width / 2, 
+            game.config.height - (borderUISize + borderPadding), 
             'rocket').setOrigin(0.5, 0);
         // add spaceships
         this.ship01 = new Spaceship(this, game.config.width + borderUISize*6, borderUISize*4, 'spaceship', 0, 30).setOrigin(0,0);
         this.ship02 = new Spaceship(this, game.config.width + borderUISize*3, borderUISize*5 + borderPadding*2, 'spaceship', 0, 20).setOrigin(0,0);
         this.ship03 = new Spaceship(this, game.config.width, borderUISize*6 + borderPadding*4, 'spaceship', 0, 10).setOrigin(0,0);
+        this.ship04 = new Spaceship(this, game.config.width + borderUISize*7, borderUISize*5 + borderPadding*2, 'newship', 0, 60).setOrigin(0,0);
 
 
         keyF = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
@@ -41,9 +43,9 @@ class Play extends Phaser.Scene {
 
         this.anims.create({
             key: 'explode',
-            frames: this.anims.generateFrameNumbers('explosion', {start: 0, end: 9, first: 0}),
+            frames: this.anims.generateFrameNumbers('explosion', {start: 0, end: 9, first: 0}), 
             frameRate: 30});
-
+        
         this.p1Score = 0;
 
         let scoreConfig = {
@@ -61,6 +63,7 @@ class Play extends Phaser.Scene {
 
         this.gameOver = false;
 
+     
         // 60-second play clock
         scoreConfig.fixedWidth = 0;
         this.clock = this.time.delayedCall(game.settings.gameTimer, () => {
@@ -68,6 +71,7 @@ class Play extends Phaser.Scene {
             this.add.text(game.config.width/2, game.config.height/2 + 64, 'Press (R) to Restart or ← for Menu', scoreConfig).setOrigin(0.5);
             this.gameOver = true;
         }, null, this);
+
     }
 
     update() {
@@ -83,9 +87,14 @@ class Play extends Phaser.Scene {
             this.ship01.update();
             this.ship02.update();
             this.ship03.update();
+            this.ship04.update();
         }
-
+        
         // check collisions
+        if(this.checkCollision(this.p1Rocket, this.ship04)) {
+            this.p1Rocket.reset();
+            this.shipExplode(this.ship04);
+        }
         if(this.checkCollision(this.p1Rocket, this.ship03)) {
             this.p1Rocket.reset();
             this.shipExplode(this.ship03);
@@ -98,8 +107,9 @@ class Play extends Phaser.Scene {
             this.p1Rocket.reset();
             this.shipExplode(this.ship01);
         }
+        console.log(game.settings.gameTimer - this.clock.elapsed)/1000;
     }
-
+    
     checkCollision(rocket, ship) {
         if(rocket.x < ship.x + ship.width &&
            rocket.x + rocket.width > ship.x &&
@@ -120,9 +130,10 @@ class Play extends Phaser.Scene {
             ship.alpha = 1;
             boom.destroy();
         });
-
+        this.clock.elapsed -= 5000;
         // add score and repaint score display
         this.p1Score += ship.points;
         this.scoreLeft.text = this.p1Score;
     }
 }
+
